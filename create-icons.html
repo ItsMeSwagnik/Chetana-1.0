@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate चेtanā PWA Icons</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        canvas { border: 1px solid #ccc; margin: 5px; }
+        .icon-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+        button { padding: 10px 20px; background: #4f46e5; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Generate चेtanā PWA Icons</h1>
+    <button onclick="generateAllIcons()">Generate All Icons</button>
+    <div id="icons" class="icon-grid"></div>
+    
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        
+        function generateIcon(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Background gradient
+            const gradient = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+            gradient.addColorStop(0, '#4f46e5');
+            gradient.addColorStop(1, '#3730a3');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Add चेtanā text
+            ctx.fillStyle = 'white';
+            ctx.font = `bold ${size * 0.15}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('चेtanā', size/2, size/2);
+            
+            // Add subtitle for larger icons
+            if (size >= 192) {
+                ctx.font = `${size * 0.08}px Arial`;
+                ctx.fillText('Mental Wellness', size/2, size/2 + size * 0.2);
+            }
+            
+            return canvas;
+        }
+        
+        function downloadCanvas(canvas, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        function generateAllIcons() {
+            const container = document.getElementById('icons');
+            container.innerHTML = '';
+            
+            sizes.forEach(size => {
+                const canvas = generateIcon(size);
+                canvas.title = `icon-${size}x${size}.png`;
+                canvas.onclick = () => downloadCanvas(canvas, `icon-${size}x${size}.png`);
+                canvas.style.cursor = 'pointer';
+                
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = `<div>${size}x${size}</div>`;
+                wrapper.appendChild(canvas);
+                container.appendChild(wrapper);
+            });
+            
+            // Generate badge icon
+            const badgeCanvas = generateIcon(72);
+            badgeCanvas.title = 'badge-72x72.png';
+            badgeCanvas.onclick = () => downloadCanvas(badgeCanvas, 'badge-72x72.png');
+            badgeCanvas.style.cursor = 'pointer';
+            
+            const badgeWrapper = document.createElement('div');
+            badgeWrapper.innerHTML = '<div>Badge 72x72</div>';
+            badgeWrapper.appendChild(badgeCanvas);
+            container.appendChild(badgeWrapper);
+            
+            alert('Icons generated! Click on each icon to download.');
+        }
+    </script>
+</body>
+</html>

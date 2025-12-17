@@ -1,0 +1,75 @@
+{
+  "buildCommand": "echo 'No build needed'",
+  "outputDirectory": ".",
+  "functions": {
+    "api/**/*.js": {
+      "maxDuration": 10
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/forum/(.*)",
+      "destination": "/api/forum?action=$1"
+    },
+    {
+      "source": "/api/users/(.*)",
+      "destination": "/api/users?action=$1"
+    },
+    {
+      "source": "/api/login",
+      "destination": "/api/users?action=login"
+    },
+    {
+      "source": "/api/register",
+      "destination": "/api/users?action=register"
+    },
+    {
+      "source": "/api/assessments",
+      "destination": "/api/data?type=assessments"
+    },
+    {
+      "source": "/api/moods",
+      "destination": "/api/data?type=moods"
+    },
+    {
+      "source": "/api/milestones",
+      "destination": "/api/data?type=milestones"
+    },
+    {
+      "source": "/api/streaks",
+      "destination": "/api/streaks"
+    },
+    {
+      "source": "/api/streaks/update",
+      "destination": "/api/streaks"
+    },
+    {
+      "source": "/api/streaks/reset",
+      "destination": "/api/streaks"
+    },
+    {
+      "source": "/api/forum/stats",
+      "destination": "/api/forum?action=stats"
+    },
+    {
+      "source": "/api/users/([0-9]+)/consent",
+      "destination": "/api/users?action=consent&id=$1"
+    },
+    {
+      "source": "/api/users/([0-9]+)/delete",
+      "destination": "/api/users?action=delete&id=$1"
+    },
+    {
+      "source": "/api/users/([0-9]+)",
+      "destination": "/api/users?action=profile&id=$1"
+    },
+    {
+      "source": "/api/admin/locations/([0-9]+)",
+      "destination": "/api/admin/locations?userId=$1"
+    },
+    {
+      "source": "/api/location",
+      "destination": "/api/admin/locations"
+    }
+  ]
+}
