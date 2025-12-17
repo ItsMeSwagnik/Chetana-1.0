@@ -1096,24 +1096,85 @@ app.delete('/api/admin/users', async (req, res) => {
     const { userId } = req.query;
     
     console.log('🗑️ Admin delete user request for userId:', userId);
+    console.log('🗑️ Request query params:', req.query);
+    console.log('🗑️ Request method:', req.method);
+    console.log('🗑️ Request URL:', req.url);
     
     if (!userId) {
-      return res.status(400).json({ error: 'userId parameter required' });
+      console.log('❌ No userId provided in query params');
+      return res.status(400).json({ success: false, error: 'userId parameter required' });
     }
     
-    const result = await queryWithRetry('DELETE FROM users WHERE id = $1', [userId]);
+    // Validate userId is a number
+    const userIdNum = parseInt(userId);
+    if (isNaN(userIdNum)) {
+      console.log('❌ Invalid userId format:', userId);
+      return res.status(400).json({ success: false, error: 'Invalid userId format' });
+    }
+    
+    console.log('🗑️ Attempting to delete user with ID:', userIdNum);
+    
+    // First check if user exists
+    const checkResult = await queryWithRetry('SELECT id FROM users WHERE id = $1', [userIdNum]);
+    console.log('🗑️ User exists check:', checkResult.rows.length > 0);
+    
+    if (checkResult.rows.length === 0) {
+      console.log('❌ User not found with ID:', userIdNum);
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    
+    // Delete the user (CASCADE will handle related records)
+    const result = await queryWithRetry('DELETE FROM users WHERE id = $1', [userIdNum]);
     
     console.log('🗑️ User deletion result:', result.rowCount, 'rows affected');
     
     if (result.rowCount === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      console.log('❌ No rows affected during deletion');
+      return res.status(404).json({ success: false, error: 'User not found or already deleted' });
     }
     
-    console.log('✅ User deleted successfully:', userId);
+    console.log('✅ User deleted successfully:', userIdNum);
     res.json({ success: true, message: 'User deleted successfully' });
   } catch (err) {
     console.error('❌ Delete user error:', err);
-    res.status(500).json({ error: 'Failed to delete user: ' + err.message });
+    res.status(500).json({ success: false, error: 'Failed to delete user: ' + err.message });
+  }
+});
+
+// Admin user deletion endpoint (with path parameter)
+app.delete('/api/admin/users/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    console.log('🗑️ Admin delete user (params) request for userId:', userId);
+    
+    if (!userId || isNaN(parseInt(userId))) {
+      return res.status(400).json({ success: false, error: 'Invalid user ID' });
+    }
+    
+    const userIdNum = parseInt(userId);
+    
+    // First check if user exists
+    const checkResult = await queryWithRetry('SELECT id FROM users WHERE id = $1', [userIdNum]);
+    
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    
+    // Delete the user (CASCADE will handle related records)
+    const result = await queryWithRetry('DELETE FROM users WHERE id = $1', [userIdNum]);
+    
+    console.log('🗑️ User deletion result:', result.rowCount, 'rows affected');
+    
+    if (result.rowCount === 0) {
+      return res.status(404).json({ success: false, error: 'User not found or already deleted' });
+    }
+    
+    console.log('✅ User deleted successfully:', userIdNum);
+    res.json({ success: true, message: 'User deleted successfully' });
+  } catch (err) {
+    console.error('❌ Delete user error:', err);
+    res.status(500).json({ success: false, error: 'Failed to delete user: ' + err.message });
   }
 });
 

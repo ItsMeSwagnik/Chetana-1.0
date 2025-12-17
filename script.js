@@ -1807,22 +1807,44 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
             try {
                 console.log('🗑️ Deleting user:', userId);
-                const response = await fetch(`${API_BASE}/api/admin/users?userId=${userId}`, { 
-                    method: 'DELETE' 
-                });
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                // Try both endpoints to ensure compatibility
+                let response;
+                let result;
+                
+                // First try the params-based endpoint
+                try {
+                    response = await fetch(`${API_BASE}/api/admin/users/${userId}`, { 
+                        method: 'DELETE' 
+                    });
+                    
+                    if (response.ok) {
+                        result = await response.json();
+                        console.log('🗑️ Delete result (params):', result);
+                    } else {
+                        throw new Error(`Params endpoint failed: ${response.status}`);
+                    }
+                } catch (paramsErr) {
+                    console.log('🗑️ Params endpoint failed, trying query endpoint:', paramsErr.message);
+                    
+                    // Fallback to query-based endpoint
+                    response = await fetch(`${API_BASE}/api/admin/users?userId=${userId}`, { 
+                        method: 'DELETE' 
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    result = await response.json();
+                    console.log('🗑️ Delete result (query):', result);
                 }
                 
-                const result = await response.json();
-                console.log('🗑️ Delete result:', result);
-                
-                if (result.success) {
+                if (result && result.success) {
                     alert('User deleted successfully!');
                     loadAdminPanel(); // Reload the admin panel
                 } else {
-                    throw new Error(result.error || 'Failed to delete user');
+                    throw new Error(result?.error || 'Failed to delete user');
                 }
             } catch (err) {
                 console.error('❌ Failed to delete user:', err);
