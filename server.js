@@ -250,6 +250,18 @@ app.use(cors(corsConfig));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static('.'));
 
+// Debug middleware to log all requests
+app.use((req, res, next) => {
+  if (!req.originalUrl.includes('.well-known') && 
+      !req.originalUrl.includes('devtools') &&
+      !req.originalUrl.includes('chrome-extension') &&
+      !req.originalUrl.includes('favicon.ico') &&
+      !req.originalUrl.includes('manifest.json')) {
+    console.log(`🔍 ${req.method} ${req.originalUrl}`);
+  }
+  next();
+});
+
 // Input validation middleware
 const validateInput = (req, res, next) => {
   if (req.body) {
@@ -1091,11 +1103,12 @@ app.get('/api/admin/users', async (req, res) => {
   }
 });
 
+// Admin user deletion endpoint (with query parameter)
 app.delete('/api/admin/users', async (req, res) => {
   try {
     const { userId } = req.query;
     
-    console.log('🗑️ Admin delete user request for userId:', userId);
+    console.log('🗑️ Admin delete user (query) request for userId:', userId);
     console.log('🗑️ Request query params:', req.query);
     console.log('🗑️ Request method:', req.method);
     console.log('🗑️ Request URL:', req.url);
@@ -1147,17 +1160,24 @@ app.delete('/api/admin/users/:userId', async (req, res) => {
     const { userId } = req.params;
     
     console.log('🗑️ Admin delete user (params) request for userId:', userId);
+    console.log('🗑️ Request params:', req.params);
+    console.log('🗑️ Request method:', req.method);
+    console.log('🗑️ Request URL:', req.url);
     
     if (!userId || isNaN(parseInt(userId))) {
+      console.log('❌ Invalid userId format:', userId);
       return res.status(400).json({ success: false, error: 'Invalid user ID' });
     }
     
     const userIdNum = parseInt(userId);
+    console.log('🗑️ Attempting to delete user with ID:', userIdNum);
     
     // First check if user exists
     const checkResult = await queryWithRetry('SELECT id FROM users WHERE id = $1', [userIdNum]);
+    console.log('🗑️ User exists check:', checkResult.rows.length > 0);
     
     if (checkResult.rows.length === 0) {
+      console.log('❌ User not found with ID:', userIdNum);
       return res.status(404).json({ success: false, error: 'User not found' });
     }
     
@@ -1167,6 +1187,7 @@ app.delete('/api/admin/users/:userId', async (req, res) => {
     console.log('🗑️ User deletion result:', result.rowCount, 'rows affected');
     
     if (result.rowCount === 0) {
+      console.log('❌ No rows affected during deletion');
       return res.status(404).json({ success: false, error: 'User not found or already deleted' });
     }
     
@@ -2331,14 +2352,7 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: `Route ${req.method} ${req.originalUrl} not found` });
 });
 
-// Security headers middleware
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  next();
-});
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
