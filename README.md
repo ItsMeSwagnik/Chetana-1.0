@@ -45,7 +45,7 @@ Open your browser and go to `http://localhost:3000`
 
 ## Admin Access
 - Email: `admin@chetana.com`
-- Password: `admin123`
+- Password: `add a pass`
 
 ## Database
 Uses PostgreSQL with automatic table creation on first run.
