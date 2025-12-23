@@ -97,9 +97,31 @@ document.addEventListener('DOMContentLoaded', () => {
         return 0;
     }
     
-    // --- DATA & CONFIG ---
-    function getDummyAiResponses() {
-        return []; // No dummy responses - chat is disabled
+    // Gemini AI Integration via Backend
+    async function getAIResponse(userMessage, isDemo = false) {
+        try {
+            const response = await fetch(`${API_BASE}/api/chat`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userMessage: userMessage
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Chat API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.reply;
+        } catch (error) {
+            console.error('AI Response Error:', error);
+            return isDemo ? 
+                "I'm here to listen and support you. Due to technical limitations in demo mode, I can't provide personalized responses right now, but I want you to know that your feelings are valid." :
+                "I'm here to support you. I'm experiencing some technical difficulties right now, but please know that what you're sharing matters to me.";
+        }
     }
 
     const assessmentData = {
@@ -336,15 +358,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function handleQuickMessage(type, message) {
-        if (!message) return;
+    // Add a flag to prevent duplicate message sending
+    let isProcessingMessage = false;
+    
+    async function handleQuickMessage(type, message) {
+        if (!message || isProcessingMessage) return;
+        
+        isProcessingMessage = true;
+        
         const isDemo = type === 'demo';
         if (isDemo && chatCount >= DAILY_CHAT_LIMIT) {
             showModal('limit-reached-modal');
+            isProcessingMessage = false;
             return;
         }
+        
         const containerId = isDemo ? 'demo-chat-messages' : 'therapist-chat-messages';
         addMessage(containerId, 'user', message);
+        
         if (isDemo) {
             chatCount++;
             localStorage.setItem('demoChatCount', chatCount);
@@ -353,24 +384,31 @@ document.addEventListener('DOMContentLoaded', () => {
         // Show typing indicator
         showTypingIndicator(containerId);
         
-        setTimeout(() => {
+        try {
+            // Get AI response
+            const aiResponse = await getAIResponse(message, isDemo);
             removeTypingIndicator(containerId);
-            const responses = getDummyAiResponses();
-            // Only add AI response if there are responses available
-            if (responses.length > 0) {
-                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-                addMessage(containerId, 'ai', randomResponse);
-            }
-        }, 2000);
+            addMessage(containerId, 'ai', aiResponse);
+        } catch (error) {
+            removeTypingIndicator(containerId);
+            const fallbackMessage = isDemo ? 
+                "I'm here to listen. Please consider creating an account for a better chat experience." :
+                "I'm here to support you. Let me know how you're feeling.";
+            addMessage(containerId, 'ai', fallbackMessage);
+        } finally {
+            isProcessingMessage = false;
+        }
     }
 
-    function handleSendMessage(type) {
+    async function handleSendMessage(type) {
+        if (isProcessingMessage) return; // Prevent sending while another message is processing
+        
         const isDemo = type === 'demo';
         const input = document.getElementById(isDemo ? 'demo-message-input' : 'therapist-message-input');
         const message = input.value.trim();
         if (message) {
-            handleQuickMessage(type, message); 
-            input.value = '';
+            input.value = ''; // Clear input immediately to prevent double sending
+            await handleQuickMessage(type, message);
         }
     }
 
@@ -2448,9 +2486,59 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // Make resetTherapists globally available
-    window.resetTherapists = resetTherapists;
-    window.updateQuickActionButtons = updateQuickActionButtons;
+    // Set up event listeners (only once)
+    function setupEventListeners() {
+        // Demo chat send button
+        const demoSendBtn = document.getElementById('demo-send-btn');
+        if (demoSendBtn && !demoSendBtn.hasAttribute('data-listener-added')) {
+            demoSendBtn.setAttribute('data-listener-added', 'true');
+            demoSendBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                handleSendMessage('demo');
+            });
+        }
+        
+        // Therapist chat send button
+        const therapistSendBtn = document.getElementById('therapist-send-btn');
+        if (therapistSendBtn && !therapistSendBtn.hasAttribute('data-listener-added')) {
+            therapistSendBtn.setAttribute('data-listener-added', 'true');
+            therapistSendBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                handleSendMessage('therapist');
+            });
+        }
+        
+        // Demo chat input enter key
+        const demoInput = document.getElementById('demo-message-input');
+        if (demoInput && !demoInput.hasAttribute('data-listener-added')) {
+            demoInput.setAttribute('data-listener-added', 'true');
+            demoInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSendMessage('demo');
+                }
+            });
+        }
+        
+        // Therapist chat input enter key
+        const therapistInput = document.getElementById('therapist-message-input');
+        if (therapistInput && !therapistInput.hasAttribute('data-listener-added')) {
+            therapistInput.setAttribute('data-listener-added', 'true');
+            therapistInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSendMessage('therapist');
+                }
+            });
+        }
+    }
+    
+    // Call setup function
+    setupEventListeners();
+    
+    // Make handleQuickMessage globally available for quick buttons
+    window.handleQuickMessage = handleQuickMessage;
+    window.handleSendMessage = handleSendMessage;
     
     // Make chart refresh functions globally available for debugging
     window.renderProgressChart = renderProgressChart;
@@ -4476,6 +4564,24 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Add all event listeners
         document.getElementById('login-btn')?.addEventListener('click', handleLogin);
+        
+        // Demo chat event listeners
+        document.getElementById('demo-send-btn')?.addEventListener('click', () => handleSendMessage('demo'));
+        document.getElementById('demo-message-input')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSendMessage('demo');
+        });
+        document.querySelectorAll('#demo-chat-screen .quick-btn').forEach(btn => {
+            btn.addEventListener('click', () => handleQuickMessage('demo', btn.dataset.message));
+        });
+        
+        // Therapist chat event listeners
+        document.getElementById('therapist-send-btn')?.addEventListener('click', () => handleSendMessage('therapist'));
+        document.getElementById('therapist-message-input')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSendMessage('therapist');
+        });
+        document.querySelectorAll('#therapist-chat-screen .quick-btn').forEach(btn => {
+            btn.addEventListener('click', () => handleQuickMessage('therapist', btn.dataset.message));
+        });
         
         // Fix signup link - ensure it works properly with multiple approaches
         const signupLink = document.getElementById('go-to-register-btn');
