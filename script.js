@@ -1737,7 +1737,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Use XMLHttpRequest to bypass fetch issues
             const response = await new Promise((resolve, reject) => {
                 const xhr = new XMLHttpRequest();
-                xhr.open('GET', 'http://localhost:3000/api/admin/users/');
+                xhr.open('GET', `${API_BASE}/api/admin/users/`);
                 xhr.onload = () => resolve({
                     ok: xhr.status >= 200 && xhr.status < 300,
                     status: xhr.status,
