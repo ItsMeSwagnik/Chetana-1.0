@@ -641,12 +641,46 @@ app.all('/api/users', async (req, res) => {
       
       // Admin login
       if (email === 'admin@chetana.com' && password === 'admin123') {
-        return res.json({
-          success: true,
-          isAdmin: true,
-          token: 'admin-token',
-          user: { id: 1, name: 'Admin', email: 'admin@chetana.com', isAdmin: true }
-        });
+        // Get or create admin user with proper ID
+        try {
+          let adminResult = await queryWithRetry('SELECT * FROM users WHERE email = $1', ['admin@chetana.com']);
+          
+          if (adminResult.rows.length === 0) {
+            const hashedPassword = await bcrypt.hash('admin123', 10);
+            adminResult = await queryWithRetry(
+              'INSERT INTO users (name, email, password, isadmin) VALUES ($1, $2, $3, $4) RETURNING *',
+              ['Admin', 'admin@chetana.com', hashedPassword, true]
+            );
+          } else {
+            // Update existing user to ensure isadmin is set
+            await queryWithRetry(
+              'UPDATE users SET isadmin = true WHERE email = $1',
+              ['admin@chetana.com']
+            );
+            // Refresh the result
+            adminResult = await queryWithRetry('SELECT * FROM users WHERE email = $1', ['admin@chetana.com']);
+          }
+          
+          const adminUser = adminResult.rows[0];
+          const token = jwt.sign({ userId: adminUser.id, isAdmin: true }, process.env.JWT_SECRET);
+          console.log('Admin login successful');
+          return res.json({
+            success: true,
+            isAdmin: true,
+            token,
+            user: { id: adminUser.id, name: adminUser.name, email: adminUser.email, isAdmin: true }
+          });
+        } catch (adminErr) {
+          console.error('Admin user error:', adminErr);
+          // Fallback to original behavior
+          const token = jwt.sign({ isAdmin: true }, process.env.JWT_SECRET);
+          return res.json({
+            success: true,
+            isAdmin: true,
+            token,
+            user: { id: 'admin', name: 'Admin', email: 'admin@chetana.com', isAdmin: true }
+          });
+        }
       }
       
       // Database login
@@ -792,6 +826,14 @@ app.post('/api/login', async (req, res) => {
             'INSERT INTO users (name, email, password, isadmin) VALUES ($1, $2, $3, $4) RETURNING *',
             ['Admin', 'admin@chetana.com', hashedPassword, true]
           );
+        } else {
+          // Update existing user to ensure isadmin is set
+          await queryWithRetry(
+            'UPDATE users SET isadmin = true WHERE email = $1',
+            ['admin@chetana.com']
+          );
+          // Refresh the result
+          adminResult = await queryWithRetry('SELECT * FROM users WHERE email = $1', ['admin@chetana.com']);
         }
         
         const adminUser = adminResult.rows[0];
@@ -807,7 +849,12 @@ app.post('/api/login', async (req, res) => {
         console.error('Admin user error:', adminErr);
         // Fallback to original behavior
         const token = jwt.sign({ isAdmin: true }, process.env.JWT_SECRET);
-        return res.json({ success: true, isAdmin: true, token });
+        return res.json({ 
+          success: true, 
+          isAdmin: true, 
+          token,
+          user: { id: 'admin', name: 'Admin', email: 'admin@chetana.com', isAdmin: true }
+        });
       }
     }
     

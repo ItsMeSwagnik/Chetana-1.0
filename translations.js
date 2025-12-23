@@ -179,9 +179,7 @@ const translations = {
         'demo_chat_disclaimer': 'This is a demo. For full features, please create an account.',
         'demo_limit_reached': 'Demo limit reached. Please create an account to continue.',
         'try_demo_chat': 'Try Demo Chat',
-        'demo_conversation_starter': 'Hello! I\'m your AI therapist. How are you feeling today?',
-        'welcome_demo_chat': 'Welcome to the demo chat.',
-        'welcome_back': 'Welcome back.',
+
         
         // Privacy Policy & Data Management
         'privacy_policy': 'Privacy Policy',
@@ -269,12 +267,7 @@ const translations = {
         // Booking & Therapist
         'my_booking_requests': 'My Booking Requests',
         
-        // AI Response Templates
-        'ai_response_1': 'Thank you for sharing. How does that make you feel?',
-        'ai_response_2': 'I understand. Could you tell me more about what\'s on your mind?',
-        'ai_response_3': 'That sounds challenging. I\'m here to listen.',
-        'ai_response_4': 'It takes courage to open up about that. What are your thoughts on it?',
-        'ai_response_5': 'I hear you. Let\'s explore that feeling a bit more.',
+
         
         // Common Actions
         'save': 'Save',
@@ -512,9 +505,7 @@ const translations = {
         'demo_chat_disclaimer': 'यह एक डेमो है। पूर्ण सुविधाओं के लिए, कृपया खाता बनाएं।',
         'demo_limit_reached': 'डेमो सीमा पूरी हो गई। जारी रखने के लिए कृपया खाता बनाएं।',
         'try_demo_chat': 'डेमो चैट आज़माएं',
-        'demo_conversation_starter': 'नमस्ते! मैं आपका AI थेरेपिस्ट हूं। आज आप कैसा महसूस कर रहे हैं?',
-        'welcome_demo_chat': 'डेमो चैट में आपका स्वागत है।',
-        'welcome_back': 'वापसी पर स्वागत है।',
+
         
         // Privacy Policy & Data Management
         'privacy_policy': 'गोपनीयता नीति',
@@ -614,12 +605,7 @@ const translations = {
         'pss10_q8': 'पिछले महीने में, आप कितनी बार अपने गुस्से को नियंत्रित करने में सक्षम रहे हैं?',
         'pss10_q9': 'पिछले महीने में, आप कितनी बार महसूस किया कि कठिनाइयां इतनी बढ़ रही हैं कि आप उन पर काबू नहीं पा सकते?',
         
-        // AI Response Templates
-        'ai_response_1': 'साझा करने के लिए धन्यवाद। इससे आपको कैसा लगता है?',
-        'ai_response_2': 'मैं समझता हूं। क्या आप मुझे बता सकते हैं कि आपके मन में क्या है?',
-        'ai_response_3': 'यह चुनौतीपूर्ण लगता है। मैं सुनने के लिए यहां हूं।',
-        'ai_response_4': 'इसके बारे में खुलकर बात करने में साहस लगता है। इस पर आपके क्या विचार हैं?',
-        'ai_response_5': 'मैं आपकी बात सुन रहा हूं। आइए उस भावना को थोड़ा और समझते हैं।',
+
         
         // Common Actions
         'save': 'सेव करें',
@@ -857,9 +843,7 @@ const translations = {
         'demo_chat_disclaimer': 'এটি একটি ডেমো। সম্পূর্ণ বৈশিষ্ট্যের জন্য, দয়া করে একটি অ্যাকাউন্ট তৈরি করুন।',
         'demo_limit_reached': 'ডেমো সীমা পৌঁছেছে। চালিয়ে যেতে দয়া করে একটি অ্যাকাউন্ট তৈরি করুন।',
         'try_demo_chat': 'ডেমো চ্যাট চেষ্টা করুন',
-        'demo_conversation_starter': 'হ্যালো! আমি আপনার AI থেরাপিস্ট। আজ আপনি কেমন অনুভব করছেন?',
-        'welcome_demo_chat': 'ডেমো চ্যাটে আপনাকে স্বাগতম।',
-        'welcome_back': 'ফিরে আসার জন্য স্বাগতম।',
+
         
         // Wellness Resources Content
         'resource_categories': 'সম্পদ বিভাগ',
@@ -925,12 +909,7 @@ const translations = {
         'admin_anonymized': 'অ্যাডমিন: সিস্টেম রক্ষণাবেক্ষণ এবং উন্নতির জন্য বেনামী ডেটা',
         'no_third_parties': 'কোনো তৃতীয় পক্ষ নেই: আমরা কখনো আপনার ব্যক্তিগত স্বাস্থ্য ডেটা বিক্রি বা ভাগ করি না',
         
-        // AI Response Templates
-        'ai_response_1': 'শেয়ার করার জন্য ধন্যবাদ। এটি আপনাকে কেমন অনুভব করায়?',
-        'ai_response_2': 'আমি বুঝতে পারছি। আপনার মনে কী আছে সে সম্পর্কে আরও বলতে পারেন?',
-        'ai_response_3': 'এটি চ্যালেঞ্জিং মনে হচ্ছে। আমি শোনার জন্য এখানে আছি।',
-        'ai_response_4': 'এ বিষয়ে খোলামেলা কথা বলতে সাহস লাগে। এ নিয়ে আপনার কী ভাবনা?',
-        'ai_response_5': 'আমি আপনার কথা শুনছি। আসুন সেই অনুভূতিটি আরও একটু অন্বেষণ করি।',
+
         
         // Common Actions
         'save': 'সংরক্ষণ',
@@ -1129,16 +1108,9 @@ const translations = {
         'demo_chat_disclaimer': 'ఇది డెమో. పూర్తి వైశిష్ట్యాల కోసం, దయచేసి ఖాతా తయారు చేయండి.',
         'demo_limit_reached': 'డెమో మర్యాద పూర్తి అయ్యింది. కొనసాగించడానికి దయచేసి ఖాతా తయారు చేయండి.',
         'try_demo_chat': 'డెమో చాట్ ప్రయత్నించండి',
-        'demo_conversation_starter': 'నమస్కారం! నేను మీ AI థెరాపిస్ట్. ఈరోజు మీరు ఎలా అనుభవిస్తున్నారు?',
-        'welcome_demo_chat': 'డెమో చాట్కు స్వాగతం.',
-        'welcome_back': 'తిరిగి వచ్చినందుకు స్వాగతం।',
+
         
-        // AI Response Templates
-        'ai_response_1': 'పంచుకున్నందుకు ధన్యవాదాలు. ఇది మీకు ఎలా అనిపిస్తుంది?',
-        'ai_response_2': 'నేను అర్థం చేసుకున్నాను. మీ మనసులో ఏమి ఉందో మరింత చెప్పగలరా?',
-        'ai_response_3': 'ఇది సవాలుగా అనిపిస్తుంది. నేను వినడానికి ఇక్కడ ఉన్నాను.',
-        'ai_response_4': 'దాని గురించి తెరిచిగా మాట్లాడడానికి ధైర్యం కావాలి. దాని గురించి మీ ఆలోచనలు ఏమిటి?',
-        'ai_response_5': 'నేను మీ మాట వింటున్నాను. ఆ అనుభూతిని మరికొంచెం అన్వేషిద్దాం.',
+
         
         // Common Actions
         'save': 'సేవ్ చేయండి',
@@ -1337,16 +1309,9 @@ const translations = {
         'demo_chat_disclaimer': 'हे एक डेमो आहे. संपूर्ण वैशिष्ट्यांसाठी, कृपया खाते तयार करा.',
         'demo_limit_reached': 'डेमो मर्यादा संपली. पुढे चालू ठेवण्यासाठी कृपया खाते तयार करा.',
         'try_demo_chat': 'डेमो चॅट वापरा',
-        'demo_conversation_starter': 'नमस्कार! मी तुमचा AI थेरपिस्ट आहे. आज तुम्ही कसे वाटत आहात?',
-        'welcome_demo_chat': 'डेमो चॅटमध्ये आपले स्वागत.',
-        'welcome_back': 'परत आल्याबद्दल स्वागत.',
+
         
-        // AI Response Templates
-        'ai_response_1': 'शेअर केल्याबद्दल धन्यवाद. यामुळे तुम्हाला कसे वाटते?',
-        'ai_response_2': 'मी समजतो. तुमच्या मनात काय आहे त्याबद्दल अधिक सांगू शकाल का?',
-        'ai_response_3': 'हे आव्हानात्मक वाटते. मी ऐकण्यासाठी इथे आहे.',
-        'ai_response_4': 'त्याबद्दल उघडपणे बोलण्यासाठी धैर्य लागते. त्याबद्दल तुमचे काय विचार आहेत?',
-        'ai_response_5': 'मी तुमचे ऐकतो. चला त्या भावनेचा आणखी थोडा शोध घेऊया.',
+
         
         // Common Actions
         'save': 'जतन करा',
@@ -1545,16 +1510,9 @@ const translations = {
         'demo_chat_disclaimer': 'இது ஒரு டெமோ. முழு வைசிஷ்ட்யங்களுக்கு, தயவு செய்து கணக்கை தயாரிக்கவும்.',
         'demo_limit_reached': 'டெமோ வரையறை அடைந்தது. தொடர தயவு செய்து கணக்கை தயாரிக்கவும்.',
         'try_demo_chat': 'டெமோ சாட் முயற்சி செய்யவும்',
-        'demo_conversation_starter': 'வணக்கம்! நான் உங்கள் AI சிகிச்சையாளர். இன்று நீங்கள் எப்படி அனுபவிக்கிறீர்கள்?',
-        'welcome_demo_chat': 'டெமோ சாட்கு வரவேற்கிறோம்.',
-        'welcome_back': 'மீண்டும் வரவேற்கிறோம்.',
+
         
-        // AI Response Templates
-        'ai_response_1': 'பகிர்ந்துகொண்டதற்கு நன்றி. இது உங்களுக்கு எப்படி உணர வைக்கிறது?',
-        'ai_response_2': 'நான் புரிந்துகொள்கிறேன். உங்கள் மனதில் என்ன இருக்கிறது என்பதை மேலும் சொல்ல முடியுமா?',
-        'ai_response_3': 'இது சவாலானதாக தெரிகிறது. நான் கேட்க இங்கே இருக்கிறேன்.',
-        'ai_response_4': 'அதைப் பற்றி வெளிப்படையாக பேசுவதற்கு தைரியம் தேவை. அதைப் பற்றி உங்கள் எண்ணங்கள் என்ன?',
-        'ai_response_5': 'நான் உங்கள் பேச்சைக் கேட்கிறேன். அந்த உணர்வை இன்னும் கொஞ்சம் ஆராய்வோம்.',
+
         
         // Common Actions
         'save': 'சேமி',
@@ -1753,16 +1711,9 @@ const translations = {
         'demo_chat_disclaimer': 'આ એક ડેમો છે. સમ્પૂર્ણ વૈશિષ્ટ્યો માટે, કૃપા કરીને ખાતું બનાવો.',
         'demo_limit_reached': 'ડેમો મર્યાદા પૂરી થઈ. ચાલુ રાખવા માટે કૃપા કરીને ખાતું બનાવો.',
         'try_demo_chat': 'ડેમો ચેટ આજમાવો',
-        'demo_conversation_starter': 'નમસ્કાર! હું તમારો AI થેરાપિસ્ટ છું. આજે તમે કેમ ફીલ કરો છો?',
-        'welcome_demo_chat': 'ડેમો ચેટમાં સ્વાગત.',
-        'welcome_back': 'પાછા આવવા બદલ સ્વાગત.',
+
         
-        // AI Response Templates
-        'ai_response_1': 'શેર કરવા બદલ આભાર. આનાથી તમને કેવું લાગે છે?',
-        'ai_response_2': 'હું સમજું છું. તમારા મનમાં શું છે તે વિશે વધુ કહી શકશો?',
-        'ai_response_3': 'આ પડકારજનક લાગે છે. હું સાંભળવા માટે અહીં છું.',
-        'ai_response_4': 'તે વિશે ખુલ્લેઆમ વાત કરવા માટે હિંમત જોઈએ છે. તે વિશે તમારા શું વિચારો છે?',
-        'ai_response_5': 'હું તમારી વાત સાંભળું છું. ચાલો તે લાગણીને થોડી વધુ શોધીએ.',
+
         
         // Common Actions
         'save': 'સેવ કરો',
@@ -1938,12 +1889,7 @@ const translations = {
         'crisis_helpline': 'ಕ್ರೈಸಿಸ್ ಹೆಲ್ಪ್ಲೈನ್',
         'need_immediate_help': 'ತತ್ಕಾಲ ಸಹಾಯ ಬೇಕು?',
         
-        // AI Response Templates
-        'ai_response_1': 'ಹಂಚಿಕೊಂಡಿದ್ದಕ್ಕಾಗಿ ಧನ್ಯವಾದಗಳು. ಇದು ನಿಮಗೆ ಹೇಗೆ ಅನಿಸುತ್ತದೆ?',
-        'ai_response_2': 'ನಾನು ಅರ್ಥಮಾಡಿಕೊಂಡಿದ್ದೇನೆ. ನಿಮ್ಮ ಮನಸ್ಸಿನಲ್ಲಿ ಏನಿದೆ ಎಂಬುದರ ಬಗ್ಗೆ ಹೆಚ್ಚು ಹೇಳಬಹುದೇ?',
-        'ai_response_3': 'ಇದು ಸವಾಲಿನಂತೆ ತೋರುತ್ತದೆ. ನಾನು ಕೇಳಲು ಇಲ್ಲಿದ್ದೇನೆ.',
-        'ai_response_4': 'ಅದರ ಬಗ್ಗೆ ಮುಕ್ತವಾಗಿ ಮಾತನಾಡಲು ಧೈರ್ಯ ಬೇಕು. ಅದರ ಬಗ್ಗೆ ನಿಮ್ಮ ಆಲೋಚನೆಗಳು ಏನು?',
-        'ai_response_5': 'ನಾನು ನಿಮ್ಮ ಮಾತು ಕೇಳುತ್ತಿದ್ದೇನೆ. ಆ ಭಾವನೆಯನ್ನು ಇನ್ನೂ ಸ್ವಲ್ಪ ಅನ್ವೇಷಿಸೋಣ.',
+
         
         // Common Actions
         'save': 'ಉಳಿಸಿ',

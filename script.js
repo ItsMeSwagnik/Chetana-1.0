@@ -10,8 +10,74 @@ document.addEventListener('DOMContentLoaded', () => {
     let nextBtnProcessing = false;
     let progressChart;
     
-    // API Base URL
-    const API_BASE = '';
+    // API Base URL - force HTTP for localhost to avoid SSL errors
+    const API_BASE = 'http://localhost:3000';
+    
+    // Store original fetch before any modifications
+    const originalFetch = window.fetch;
+    
+    // AGGRESSIVE fetch override to prevent ANY HTTPS requests to localhost
+    window.fetch = function(input, init = {}) {
+        let url = input;
+        
+        // Handle Request objects
+        if (input instanceof Request) {
+            url = input.url;
+        }
+        
+        // Force HTTP for localhost/127.0.0.1
+        if (typeof url === 'string' && (url.includes('localhost') || url.includes('127.0.0.1'))) {
+            url = url.replace(/^https:\/\//gi, 'http://');
+            console.log('🔧 Converted URL to HTTP:', url);
+            
+            // If input was a Request object, create new one with HTTP URL
+            if (input instanceof Request) {
+                input = new Request(url, {
+                    method: input.method,
+                    headers: input.headers,
+                    body: input.body,
+                    mode: input.mode,
+                    credentials: input.credentials,
+                    cache: input.cache,
+                    redirect: input.redirect,
+                    referrer: input.referrer,
+                    integrity: input.integrity
+                });
+            } else {
+                input = url;
+            }
+        }
+        
+        return originalFetch.call(this, input, init);
+    };
+    
+    // Create a completely new HTTP-only fetch function
+    function httpFetch(url, options = {}) {
+        // Force HTTP protocol for localhost
+        if (url.includes('localhost') || url.includes('127.0.0.1')) {
+            url = url.replace(/^https:\/\//, 'http://');
+        }
+        console.log('🔧 HTTP Fetch URL:', url);
+        return originalFetch(url, options);
+    }
+    
+    // Debug: Log the API base URL to console
+    console.log('🌐 API_BASE configured as:', API_BASE);
+    console.log('🌐 Current location:', window.location.href);
+    console.log('🌐 Hostname:', window.location.hostname);
+    console.log('🌐 Protocol:', window.location.protocol);
+    
+    // Check for HTTPS enforcement
+    if (window.location.protocol === 'https:' && window.location.hostname === 'localhost') {
+        console.log('🚨 WARNING: Page loaded over HTTPS on localhost!');
+        console.log('🚨 This may cause mixed content issues with HTTP API calls');
+        console.log('🚨 Consider accessing the page via http://localhost instead');
+    }
+    
+    // Force all localhost requests to HTTP
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.log('🔒 Localhost detected - forcing HTTP for all API calls');
+    }
     
     // Global function to fetch streak data
     async function fetchAndDisplayStreak(userId) {
@@ -33,16 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- DATA & CONFIG ---
     function getDummyAiResponses() {
-        const currentLang = localStorage.getItem('selectedLanguage') || 'en';
-        const t = window.translations && window.translations[currentLang] ? window.translations[currentLang] : window.translations?.en || {};
-        
-        return [
-            t.ai_response_1 || "Thank you for sharing. How does that make you feel?",
-            t.ai_response_2 || "I understand. Could you tell me more about what's on your mind?",
-            t.ai_response_3 || "That sounds challenging. I'm here to listen.",
-            t.ai_response_4 || "It takes courage to open up about that. What are your thoughts on it?",
-            t.ai_response_5 || "I hear you. Let's explore that feeling a bit more."
-        ];
+        return []; // No dummy responses - chat is disabled
     }
 
     const assessmentData = {
@@ -299,8 +356,11 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             removeTypingIndicator(containerId);
             const responses = getDummyAiResponses();
-            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-            addMessage(containerId, 'ai', randomResponse);
+            // Only add AI response if there are responses available
+            if (responses.length > 0) {
+                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                addMessage(containerId, 'ai', randomResponse);
+            }
         }, 2000);
     }
 
@@ -366,12 +426,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (data.isAdmin) {
                     console.log('👑 Frontend: Admin login detected');
-                    // Use the admin user data from server response if available
-                    const adminUser = data.user || { id: 'admin', name: 'Admin', email: 'admin@chetana.com', isAdmin: true };
-                    localStorage.setItem('currentUser', JSON.stringify(adminUser));
-                    updateWelcomeMessage(adminUser.name || 'Admin');
+                    localStorage.setItem('currentUser', JSON.stringify(data.user));
+                    updateWelcomeMessage(data.user.name || 'Admin');
+                    
+                    // Load admin panel and show admin screen
                     loadAdminPanel();
                     showScreen('admin-screen');
+                    return;
                 } else {
                     console.log('👤 Frontend: Regular user login');
                     localStorage.setItem('currentUser', JSON.stringify(data.user));
@@ -459,7 +520,43 @@ document.addEventListener('DOMContentLoaded', () => {
                         if ('geolocation' in navigator) {
                             try {
                                 const position = await new Promise((resolve, reject) => {
-                                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+                                    let watchId;
+                                    let bestPosition = null;
+                                    let timeout;
+                                    
+                                    const cleanup = () => {
+                                        if (watchId) navigator.geolocation.clearWatch(watchId);
+                                        if (timeout) clearTimeout(timeout);
+                                    };
+                                    
+                                    watchId = navigator.geolocation.watchPosition(
+                                        (pos) => {
+                                            if (!bestPosition || pos.coords.accuracy < bestPosition.coords.accuracy) {
+                                                bestPosition = pos;
+                                            }
+                                            if (pos.coords.accuracy <= 50) {
+                                                cleanup();
+                                                resolve(bestPosition);
+                                            }
+                                        },
+                                        (err) => {
+                                            cleanup();
+                                            reject(err);
+                                        },
+                                        { 
+                                            enableHighAccuracy: true,
+                                            maximumAge: 0
+                                        }
+                                    );
+                                    
+                                    timeout = setTimeout(() => {
+                                        cleanup();
+                                        if (bestPosition) {
+                                            resolve(bestPosition);
+                                        } else {
+                                            reject(new Error('Location timeout'));
+                                        }
+                                    }, 30000);
                                 });
                                 
                                 const response = await fetch(`${API_BASE}/api/location`, {
@@ -473,12 +570,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                     })
                                 });
                                 
-                                // Only log errors if they're not 404 (endpoint might not be available)
                                 if (!response.ok && response.status !== 404) {
                                     console.log('Location update failed:', response.status);
                                 }
                             } catch (err) {
-                                // Silent fail for periodic updates - location tracking is optional
                                 console.log('Location update skipped:', err.message);
                             }
                         }
@@ -1636,96 +1731,89 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadAdminPanel() {
+        console.log('📊 Loading admin panel...');
+        
         try {
-            const response = await fetch(`${API_BASE}/api/users?action=admin`);
+            // Use XMLHttpRequest to bypass fetch issues
+            const response = await new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', 'http://localhost:3000/api/admin/users/');
+                xhr.onload = () => resolve({
+                    ok: xhr.status >= 200 && xhr.status < 300,
+                    status: xhr.status,
+                    json: () => Promise.resolve(JSON.parse(xhr.responseText))
+                });
+                xhr.onerror = () => reject(new Error('Network error'));
+                xhr.send();
+            });
             
-            if (!response.ok) {
+            if (response.ok) {
+                const data = await response.json();
+                console.log('📊 Admin data received:', data);
+                
+                // Update user statistics
+                document.getElementById('total-users').textContent = data.totalUsers || data.users?.length || '0';
+                document.getElementById('total-assessments').textContent = data.totalAssessments || '0';
+                
+                const recentAssessmentsEl = document.getElementById('recent-assessments');
+                if (recentAssessmentsEl) {
+                    recentAssessmentsEl.textContent = data.totalAssessments || '0';
+                }
+                
+                // Display users list
+                const usersList = document.getElementById('users-list');
+                if (data.users && data.users.length > 0) {
+                    usersList.innerHTML = data.users.map(user => `
+                        <div class="user-card" style="border: 1px solid var(--border); padding: 1rem; margin: 0.5rem 0; border-radius: 8px; background: var(--surface);">
+                            <div class="user-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <div>
+                                    <h3 style="margin: 0; color: var(--text-primary);">${user.name}</h3>
+                                    <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">${user.email}</p>
+                                </div>
+                                <div class="user-actions" style="display: flex; gap: 0.5rem;">
+                                    <button onclick="viewUserReports(${user.id}, '${user.name}')" class="btn btn--outline" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">📈 Reports</button>
+                                    <button onclick="viewUserLocations(${user.id}, '${user.name}')" class="btn btn--outline" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">📍 Locations</button>
+                                    <button onclick="deleteUser(${user.id})" class="btn btn--danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">🗑️ Delete</button>
+                                </div>
+                            </div>
+                            <div class="user-stats" style="display: flex; gap: 1rem; font-size: 0.8rem; color: var(--text-secondary);">
+                                <span>📅 Joined: ${new Date(user.created_at).toLocaleDateString()}</span>
+                                <span>📊 Assessments: ${user.assessment_count || 0}</span>
+                                <span>📅 Last Assessment: ${user.last_assessment ? new Date(user.last_assessment).toLocaleDateString() : 'Never'}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    usersList.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">No users found.</p>';
+                }
+                
+                console.log('✅ Admin panel loaded successfully');
+            } else {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-            
-            const responseText = await response.text();
-            let data;
-            
-            try {
-                data = JSON.parse(responseText);
-            } catch (parseErr) {
-                console.error('Admin API returned HTML:', responseText.substring(0, 200));
-                throw new Error('Admin API returned invalid response');
-            }
-            
-            // Handle missing or invalid data
-            const users = data.users || [];
-            const regularUsers = users.filter(user => !user.isadmin);
-            const totalAssessments = data.totalAssessments || 0;
-            
-            document.getElementById('total-users').textContent = regularUsers.length;
-            document.getElementById('total-assessments').textContent = totalAssessments;
-            
-            // Add recent assessments info if element exists
-            const recentAssessmentsEl = document.getElementById('recent-assessments');
-            if (recentAssessmentsEl && data.recentAssessments !== undefined) {
-                recentAssessmentsEl.textContent = data.recentAssessments;
-            }
-            
-            const usersList = document.getElementById('users-list');
-            usersList.innerHTML = '';
-            
-            if (regularUsers.length === 0) {
-                usersList.innerHTML = '<p>No users found.</p>';
-                return;
-            }
-            
-
-            
-            // Remove existing event listeners and add new ones
-            const newUsersList = usersList.cloneNode(false);
-            usersList.parentNode.replaceChild(newUsersList, usersList);
-            
-            // Re-append all user cards to the new container
-            regularUsers.forEach(user => {
-                const userCard = document.createElement('div');
-                userCard.className = 'user-card';
-                userCard.innerHTML = `
-                    <div class="user-header">
-                        <div>
-                            <div class="user-name">${user.name || 'Unknown'}</div>
-                            <div class="user-email">${user.email || 'No email'}</div>
-                        </div>
-                        <button class="view-reports-btn" data-user-id="${user.id}" data-user-name="${user.name || 'User'}">View Reports</button>
-                        <button class="view-locations-btn" data-user-id="${user.id}" data-user-name="${user.name || 'User'}">View Locations</button>
-                        <button class="delete-user-btn" data-user-id="${user.id}">Delete</button>
-                    </div>
-                    <div class="user-details">
-                        <div>DOB: ${user.dob ? user.dob.split('T')[0] : 'N/A'}</div>
-                        <div>Assessments: ${user.assessment_count || 0}</div>
-                        <div>Last Assessment: ${user.last_assessment ? new Date(user.last_assessment).toLocaleDateString() : 'Never'}</div>
-                        <div>Joined: ${user.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}</div>
-                    </div>
-                `;
-                newUsersList.appendChild(userCard);
-            });
-            
-            // Add single event listener to new container
-            newUsersList.addEventListener('click', (e) => {
-                if (e.target.classList.contains('view-reports-btn')) {
-                    const userId = e.target.getAttribute('data-user-id');
-                    const userName = e.target.getAttribute('data-user-name');
-                    viewUserReports(userId, userName);
-                } else if (e.target.classList.contains('view-locations-btn')) {
-                    const userId = e.target.getAttribute('data-user-id');
-                    const userName = e.target.getAttribute('data-user-name');
-                    viewUserLocations(userId, userName);
-                } else if (e.target.classList.contains('delete-user-btn')) {
-                    const userId = e.target.getAttribute('data-user-id');
-                    deleteUser(userId);
-                }
-            });
-            
         } catch (err) {
-            console.error('Failed to load admin data:', err);
-            document.getElementById('users-list').innerHTML = `<p>Error loading admin data: ${err.message}</p>`;
+            console.error('❌ Failed to load admin panel:', err);
+            
+            // Show fallback admin panel with server connection error
+            document.getElementById('users-list').innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    <h3>🔌 Server Connection Required</h3>
+                    <p>Unable to connect to the backend server.</p>
+                    <p>Please ensure the server is running on port 3000.</p>
+                    <button onclick="loadAdminPanel()" class="btn btn--primary" style="margin-top: 1rem;">🔄 Retry Connection</button>
+                </div>
+            `;
+            document.getElementById('total-users').textContent = '0';
+            document.getElementById('total-assessments').textContent = '0';
+            const recentAssessmentsEl = document.getElementById('recent-assessments');
+            if (recentAssessmentsEl) {
+                recentAssessmentsEl.textContent = '0';
+            }
         }
     }
+    
+    // Make loadAdminPanel globally available
+    window.loadAdminPanel = loadAdminPanel;
     
     async function loadReports() {
         try {
@@ -4417,10 +4505,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('back-to-login-btn')?.addEventListener('click', () => showScreen('login-screen'));
         document.getElementById('guest-login-btn')?.addEventListener('click', () => { 
             showScreen('demo-chat-screen'); 
-            const currentLang = localStorage.getItem('selectedLanguage') || 'en';
-            const t = window.translations && window.translations[currentLang] ? window.translations[currentLang] : {};
-            const welcomeMsg = t.welcome_demo_chat || "Welcome to the demo chat.";
-            addMessage('demo-chat-messages', 'ai', welcomeMsg); 
         });
         document.getElementById('profile-btn')?.addEventListener('click', () => showScreen('profile-screen'));
         document.getElementById('profile-back-btn')?.addEventListener('click', () => showScreen('dashboard-screen'));
@@ -4755,7 +4839,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         document.getElementById('go-to-therapist-chat-btn')?.addEventListener('click', () => { 
             showScreen('therapist-chat-screen'); 
-            addMessage('therapist-chat-messages', 'ai', "Welcome back."); 
         });
         document.getElementById('therapist-chat-home-btn')?.addEventListener('click', () => showScreen('dashboard-screen'));
         document.getElementById('therapist-send-btn')?.addEventListener('click', () => handleSendMessage('therapist'));
@@ -7566,11 +7649,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (locationPermission?.checked && 'geolocation' in navigator) {
                 try {
                     const position = await new Promise((resolve, reject) => {
-                        navigator.geolocation.getCurrentPosition(resolve, reject, {
-                            enableHighAccuracy: true,
-                            timeout: 10000,
-                            maximumAge: 300000
-                        });
+                        const timeoutId = setTimeout(() => {
+                            reject(new Error('Location request timed out'));
+                        }, 15000);
+                        
+                        navigator.geolocation.getCurrentPosition(
+                            (pos) => {
+                                clearTimeout(timeoutId);
+                                resolve(pos);
+                            },
+                            (err) => {
+                                clearTimeout(timeoutId);
+                                reject(err);
+                            },
+                            {
+                                enableHighAccuracy: false,
+                                timeout: 15000,
+                                maximumAge: 600000
+                            }
+                        );
                     });
                     
                     // Send location to server
@@ -7584,8 +7681,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             accuracy: position.coords.accuracy
                         })
                     });
+                    console.log('✅ Location captured successfully');
                 } catch (err) {
-                    console.log('Location capture failed:', err.message);
+                    console.log('⚠️ Location capture skipped:', err.message);
                 }
             }
             
