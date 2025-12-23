@@ -10,8 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let nextBtnProcessing = false;
     let progressChart;
     
-    // API Base URL - force HTTP for localhost to avoid SSL errors
-    const API_BASE = 'http://localhost:3000';
+    // API Base URL - dynamic based on environment
+    const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3000' : window.location.origin;
     
     // Store original fetch before any modifications
     const originalFetch = window.fetch;
@@ -67,14 +67,14 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('🌐 Hostname:', window.location.hostname);
     console.log('🌐 Protocol:', window.location.protocol);
     
-    // Check for HTTPS enforcement
+    // Check for HTTPS enforcement only on localhost
     if (window.location.protocol === 'https:' && window.location.hostname === 'localhost') {
         console.log('🚨 WARNING: Page loaded over HTTPS on localhost!');
         console.log('🚨 This may cause mixed content issues with HTTP API calls');
         console.log('🚨 Consider accessing the page via http://localhost instead');
     }
     
-    // Force all localhost requests to HTTP
+    // Force all localhost requests to HTTP only
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         console.log('🔒 Localhost detected - forcing HTTP for all API calls');
     }
