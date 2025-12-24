@@ -1,4 +1,5 @@
 import { model } from "../lib/gemini.js";
+import { saveMessage } from "../lib/chatService.js";
 
 export default async function handler(req, res) {
   try {
@@ -25,7 +26,7 @@ Message:
 
     // Stage 2: Therapist response with emotion context
     const systemPrompt = `
-You are an emotionally intelligent conversational assistant therapist and your name is "चेtanā" tagline "your mental health companion".
+You are an emotionally intelligent conversational assistant therapist and your name is "Chetana" tagline "your mental health companion".
 
 Your responses follow real human dialogue patterns derived from emotion-labeled conversations.
 
@@ -97,6 +98,37 @@ If the user expresses immediate harm to self or others, respond with calm concer
     const result = await model.generateContent(systemPrompt);
     const response = await result.response.text();
     console.log('✅ Response generated successfully');
+
+    // Save messages to Firestore (non-blocking with enhanced error handling)
+    const userId = req.body.userId || 'anonymous';
+    try {
+      // Pre-validate message sizes before attempting to save
+      const userMsgSize = userMessage ? userMessage.length : 0;
+      const responseMsgSize = response ? response.length : 0;
+      
+      if (userMsgSize > 5000) {
+        console.warn(`⚠️ User message too large (${userMsgSize} chars), will be truncated`);
+      }
+      if (responseMsgSize > 5000) {
+        console.warn(`⚠️ Response message too large (${responseMsgSize} chars), will be truncated`);
+      }
+      
+      await saveMessage(userId, 'user', userMessage);
+      await saveMessage(userId, 'assistant', response);
+      
+    } catch (error) {
+      console.log('❌ Failed to save to Firestore:', error.message);
+      
+      // Log additional details for buffer errors
+      if (error.message && error.message.includes('buffer')) {
+        console.log('🔥 Buffer error detected - message sizes:', {
+          userMessage: userMessage ? userMessage.length : 0,
+          response: response ? response.length : 0
+        });
+      }
+      
+      // Continue without breaking the chat - Firestore is optional
+    }
 
     res.status(200).json({ 
       reply: response,

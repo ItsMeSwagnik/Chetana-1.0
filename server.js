@@ -633,7 +633,7 @@ app.post('/api/chat', async (req, res) => {
   console.log("KEY PREFIX:", process.env.GEMINI_API_KEY?.slice(0, 4));
   console.log('🤖 Chat endpoint hit with body:', req.body);
   try {
-    const { userMessage } = req.body;
+    const { userMessage, userId } = req.body;
 
     if (!userMessage) {
       console.log('❌ No user message provided');
@@ -740,6 +740,31 @@ If the user expresses immediate harm to self or others, respond with calm concer
     const response = await result.response.text();
     console.log('✅ Response generated successfully');
 
+    // Save messages to Firestore if userId provided
+    if (userId && userId !== 'anonymous') {
+      try {
+        const { saveMessage } = await import('./lib/chatService.js');
+        
+        // Validate message lengths before saving
+        const maxLength = 10000;
+        const userMessageToSave = userMessage.length > maxLength ? 
+          userMessage.substring(0, maxLength) + '... [truncated]' : userMessage;
+        const responseToSave = response.length > maxLength ? 
+          response.substring(0, maxLength) + '... [truncated]' : response;
+        
+        await saveMessage(userId, 'user', userMessageToSave);
+        await saveMessage(userId, 'assistant', responseToSave);
+        console.log('💾 Messages saved to Firestore');
+      } catch (firestoreErr) {
+        console.error('❌ Failed to save to Firestore:', firestoreErr.message || firestoreErr);
+        // Log specific error details for debugging
+        if (firestoreErr.message && firestoreErr.message.includes('FIRESTORE')) {
+          console.error('🔥 Firestore internal error detected - this is likely a buffer overflow or encoding issue');
+        }
+        // Don't fail the request if Firestore save fails
+      }
+    }
+
     res.json({ 
       reply: response,
       emotion: emotion
@@ -748,6 +773,25 @@ If the user expresses immediate harm to self or others, respond with calm concer
   } catch (error) {
     console.error('❌ Chat API error:', error);
     res.status(500).json({ error: 'Failed to generate response: ' + error.message });
+  }
+});
+
+// Chat history endpoint
+app.get('/api/chat-history', async (req, res) => {
+  try {
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    const { getChatHistory } = await import('./lib/chatService.js');
+    const history = await getChatHistory(userId);
+    res.status(200).json({ history });
+
+  } catch (error) {
+    console.error('Chat history error:', error);
+    res.status(500).json({ error: 'Failed to fetch chat history' });
   }
 });
 

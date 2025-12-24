@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Gemini AI Integration via Backend
-    async function getAIResponse(userMessage, isDemo = false) {
+    async function getAIResponse(userMessage, isDemo = false, userId = 'anonymous') {
         try {
             const response = await fetch(`${API_BASE}/api/chat`, {
                 method: 'POST',
@@ -106,7 +106,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    userMessage: userMessage
+                    userMessage: userMessage,
+                    userId: userId
                 })
             });
 
@@ -385,8 +386,12 @@ document.addEventListener('DOMContentLoaded', () => {
         showTypingIndicator(containerId);
         
         try {
+            // Get current user for chat history
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            const userId = currentUser ? currentUser.id : 'anonymous';
+            
             // Get AI response
-            const aiResponse = await getAIResponse(message, isDemo);
+            const aiResponse = await getAIResponse(message, isDemo, userId);
             removeTypingIndicator(containerId);
             addMessage(containerId, 'ai', aiResponse);
         } catch (error) {
@@ -2539,6 +2544,48 @@ document.addEventListener('DOMContentLoaded', () => {
     // Make handleQuickMessage globally available for quick buttons
     window.handleQuickMessage = handleQuickMessage;
     window.handleSendMessage = handleSendMessage;
+    
+    // Function to load chat history
+    async function loadChatHistory(userId) {
+        try {
+            const response = await fetch(`${API_BASE}/api/chat-history?userId=${userId}`);
+            if (!response.ok) {
+                console.log('Chat history not available');
+                return;
+            }
+            
+            const data = await response.json();
+            if (data.history && data.history.length > 0) {
+                // Clear existing messages
+                const chatMessages = document.getElementById('therapist-chat-messages');
+                if (chatMessages) {
+                    chatMessages.innerHTML = '';
+                }
+                
+                // Load previous messages
+                data.history.forEach(msg => {
+                    const role = msg.role === 'user' ? 'user' : 'ai';
+                    addMessage('therapist-chat-messages', role, msg.message);
+                });
+            }
+        } catch (error) {
+            console.log('Failed to load chat history:', error);
+        }
+    }
+    
+    // Override showScreen to load chat history
+    const baseShowScreen = showScreen;
+    showScreen = function(screenId) {
+        baseShowScreen(screenId);
+        
+        // Load chat history when opening therapist chat
+        if (screenId === 'therapist-chat-screen') {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (currentUser && currentUser.id) {
+                loadChatHistory(currentUser.id);
+            }
+        }
+    };
     
     // Make chart refresh functions globally available for debugging
     window.renderProgressChart = renderProgressChart;
