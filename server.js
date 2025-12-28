@@ -754,13 +754,9 @@ If the user expresses immediate harm to self or others, respond with calm concer
         
         await saveMessage(userId, 'user', userMessageToSave);
         await saveMessage(userId, 'assistant', responseToSave);
-        console.log('💾 Messages saved to Firestore');
+        // Don't log success here - let chatService handle its own logging
       } catch (firestoreErr) {
         console.error('❌ Failed to save to Firestore:', firestoreErr.message || firestoreErr);
-        // Log specific error details for debugging
-        if (firestoreErr.message && firestoreErr.message.includes('FIRESTORE')) {
-          console.error('🔥 Firestore internal error detected - this is likely a buffer overflow or encoding issue');
-        }
         // Don't fail the request if Firestore save fails
       }
     }
